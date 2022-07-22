@@ -1,0 +1,75 @@
+import numpy as np
+import matplotlib.pyplot as plt 
+
+#making a LotkaVolterra function that calculates the Euler's forward method if the user inputs the values x0,y0, r, k, a, t
+def LotkaVolterra(x0, y0, r, k, b, a, t):
+  x= np.zeros(len(t)) #initializing x and y values
+  y=np.zeros(len(t))
+  x[0]=x0
+  y[0]=y0
+
+  for n in range(0, len(t)-1): 
+    dt=t[n+1]-t[n] #equation for the time space
+    x[n+1]=x[n]+dt*(r*x[n]-a*x[n]*y[n]) #equation from the Euler's Forward Method
+    y[n+1]=y[n]+dt*(b*x[n]*y[n]-k*y[n])
+  return x,y
+  
+def main(): 
+  n=30000
+  t=np.linspace(0,100,n)
+  r, a, b, k= 0.1, 0.01, 0.01, 1 #insert the initial values
+  x0, y0= 10, 10 #intial conditions
+  x,y = LotkaVolterra(x0, y0, r, k, b, a, t) #call upon the function you coded previously and insert the return variables-x,y- into the variables x and y
+
+  x0, y0= 20, 20 
+  x_1,y_1 = LotkaVolterra(x0, y0, r, k, b, a, t)
+
+  x0, y0= 30, 30 
+  x_2,y_2 = LotkaVolterra(x0, y0, r, k, b, a, t)
+
+
+  print(y[:10])
+  
+  #1ST plot y v. x 
+  
+  plt.subplot(2, 1, 1) #code for formatting the spacing of the plots  
+  plt.plot(x, y, 'b', label='x0=y0=10', alpha=0.6, lw=2.0) #plotting the return variables in blue with the label x0=y0=10
+  plt.plot(x_1, y_1, 'r', label='x0=y0=20', alpha=0.6, lw=2.0)
+  plt.plot(x_2, y_2, 'g', label='x0=y0=30', alpha=0.6, lw=2.0)
+  plt.legend() #inserts a legend containing all the labels
+  
+  plt.xlabel('Small Fish Population x') #names the x axis 
+  plt.ylabel('Shark Population y') #names the y axis 
+  plt.grid(True)
+  plt.title("Solution of Lotka Volterra System using Euler's Forward Method") #title 
+  
+  plt.subplot(2, 1, 2)
+  #First Plot x,y v. t 
+  plt.plot(t, x_1, 'b', label='x0=y0=20 small fish', alpha=0.6, lw=2.0) #plotting time against the return variable x_1 
+  plt.plot(t, y_1, 'r', label='x0=y0=20 predators', alpha=0.6, lw=2.0)
+  plt.legend()
+  plt.xlabel('Time in Years')
+  plt.ylabel('Population Size')
+  plt.ylim([0,400])
+  plt.grid(True)
+  plt.title("Solution of Lotka Volterra System using Euler's Forward Method")
+  
+  plt.tight_layout()
+  plt.show()
+
+
+  print("The maximum of small fish population is %d" % (int(np.max(x))))
+  print("The maximum of shark population is {}" .format(int(np.max(y))))
+
+
+  print("The maximum of small fish population is %d" % (int(np.max(x_1))))
+  print("The maximum of shark population is {}" .format(int(np.max(y_1))))
+
+
+  print("The maximum of small fish population is %d" % (int(np.max(x_2))))
+  print("The maximum of shark population is {}" .format(int(np.max(y_2))))
+
+
+
+
+main()
