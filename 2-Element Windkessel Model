@@ -78,7 +78,7 @@ t_hr,sol_hr,q1_hr = solve_rc(p0_hr,hr_hr,sv_hr,tpr_hr,c_hr,valve_hr)
 
 plt.figure(figsize=(10,3))
 plt.subplot(1,2,1)
-plt.plot(t_ref,sol_ref/1333.22,'r--',alpha=0.6)
+plt.plot(t_ref,sol_ref/1333.22,'r--',alpha=0.6) #don't forget about units! very important!!
 plt.plot(t_hr,sol_hr/1333.22,'g',alpha=0.6)
 
 plt.xlabel('Time [s]')
