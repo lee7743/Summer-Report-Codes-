@@ -1,0 +1,75 @@
+from math import fmod
+import numpy as np
+import matplotlib.pyplot as plt 
+
+def solve_rc(p0,hr,sv, pf, ra, rv, c,valve):  
+  def rhs(t,p):
+    tr=fmod(t,t_cycle) #fmod returns the remainder of t/t_cycle
+    co = hr*sv/60.0
+    l = (t_cycle)/3.0
+    h = (9.0/2.0)*co
+
+    if(tr <= 1.0/3.0):
+      Q_in = 54.0*co*(-3*tr**2 + tr)
+    else:
+      Q_in = 0.0
+
+    pa=(Q_in*ra)+p
+
+    return ((pa*rv)-(p*rv)-(p*ra)+(pf*ra))/(c*ra*rv), Q_in, pa #similar to 2 element windkessel model, but we are not returning a different equation with 2 resistors and 1 other variable (arterial pressure)
+
+  mmhg_to_barye = 1333.22 #1 mmhg = 1333.2 barye
+  t_cycle = 60.0/hr
+  n = 100 
+  tot_cycles = 10
+  dt = t_cycle/n
+  p_sol = np.zeros(n*tot_cycles+1)
+  p_sol[0]=p0
+  t = 0.0
+  t_store  = [0.0]
+  q1_store = [0.0]
+  pa_store = [p0]
+  idx = 0
+
+  for num_cycle in range(tot_cycles):
+    for i in range(n):
+      # Compute the relative cycle time    
+      k1,q1,pa = rhs(t,p_sol[idx])
+      k2,_,_ = rhs(t+dt/2,p_sol[idx]+(dt/2)*k1)
+      k3,_,_ = rhs(t+dt/2,p_sol[idx]+(dt/2)*k2)
+      k4,_,_ = rhs(t+dt,p_sol[idx]+dt*k3)
+      p_sol[idx+1] = p_sol[idx] + (dt/6.0)*(k1+2*k2+2*k3+k4)
+      # print('p:',p_sol[idx]/1333.22)
+      t += dt
+      idx += 1
+      t_store.append(t)
+      q1_store.append(q1)
+      pa_store.append(pa)
+  return t_store,p_sol,q1_store, pa_store
+  
+p0    = 80.0*1333.22 # 80.0 mmHg
+hr    = 72.0 # Beats/minute
+sv    = 70.0 # mL
+pf    = 9.0*1333.22 #mmHg
+rv    = 0.5 *1333.22 #mmHg*sec/mL
+ra    = 0.06 *1333.22 #mmHg*sec/mL
+c     = 50/1333.22 # mL/mmHg
+valve = 1.0
+
+t,sol,q1,pa = solve_rc(p0,hr,sv, pf, ra, rv, c,valve)
+
+plt.figure(figsize=(10,3))
+plt.subplot(1,2,1)
+plt.plot(t,sol/1333.22,label='Ps')
+plt.plot(t,np.array(pa)/1333.22,label='Pa')
+plt.legend()
+plt.xlabel('Time [s]')
+plt.ylabel('Pressure [mmHg]')
+
+plt.subplot(1,2,2)
+plt.plot(t,np.array(q1)*60.0/1000.0)
+plt.xlabel('Time [s]')
+plt.ylabel('Aortic flow  [L/min]')
+plt.tight_layout()
+plt.show()
+plt.close()
