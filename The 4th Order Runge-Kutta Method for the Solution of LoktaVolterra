@@ -38,7 +38,7 @@ def main():
   y_2 = LotkaVolterra_rk4(y0, r, k, b, a, t)
 
   plt.subplot(2, 1, 1)
-  plt.plot(y[:,0], y[:,1], 'b', label='inc 10', alpha=0.6, lw=2.0) 
+  plt.plot(y[:,0], y[:,1], 'b', label='inc 10', alpha=0.6, lw=2.0) #note the difference in notation between the runge-katta and euler's method 
   plt.plot(y_1[:,0], y_1[:,1], 'r', label='inc 20', alpha=0.6, lw=2.0)
   plt.plot(y_2[:,0], y_2[:,1], 'g', label='inc 30', alpha=0.6, lw=2.0)
   plt.legend()
@@ -62,13 +62,13 @@ def main():
   plt.tight_layout()
   plt.show()
 
-  print("The maximum of shark population is {}" .format(int(np.max(y))))
+  print("The maximum of small fish population is {}" .format(int(np.max(y[:,0]))))
+  print("The maximum of small fish population is {}" .format(int(np.max(y[:,1]))))
 
+  print("The maximum of small fish population is {}" .format(int(np.max(y_1[:,0]))))
+  print("The maximum of shark population is {}" .format(int(np.max(y_1[:,1]))))
 
-  print("The maximum of shark population is {}" .format(int(np.max(y_1))))
-
-
-  print("The maximum of shark population is {}" .format(int(np.max(y_2))))
-
+  print("The maximum of small fish population is {}" .format(int(np.max(y_2[:,0]))))
+  print("The maximum of shark population is {}" .format(int(np.max(y_2[:,1]))))
 
 main()
