@@ -1,0 +1,249 @@
+from math import fmod
+import numpy as np
+import matplotlib.pyplot as plt 
+
+#time step organized in cycles* 
+
+def solve_rc(p0,hr,sv,tpr,c,valve):
+  # RHS=right hand side
+  # tr = fmod(t,t_cycle) # Compute relative time wrt the current heart cycle
+ 
+  def rhs(t,p):
+    tr=fmod(t,t_cycle) #fmod returns the remainder of t/t_cycle
+    co = hr*sv/60.0
+    l = (t_cycle)/3.0
+    h = (9.0/2.0)*co
+    # Instantaneous CO    
+    
+    # Implement Q_in as a function of time tr (when tr<1/3 : systole, otherwise diastole)
+    if(tr <= 1.0/3.0):
+      Q_in = 54.0*co*(-3*tr**2 + tr)
+    else:
+      Q_in = 0.0
+     
+    # return (Q_in/c) - (p/(tpr*c))
+    return (Q_in/c)-(p/(tpr*c)),Q_in
+
+  #initial conditions
+  barye_to_mmhg = 1333.22
+  t_cycle = 60.0/hr
+  n = 100 # number of time steps per cycle
+  tot_cycles = 10
+  dt = t_cycle/n
+  # Solve with RK4
+  p_sol = np.zeros(n*tot_cycles+1)
+  
+  # Set initial condition
+  p_sol[0]=p0
+  t = 0.0
+  t_store = [0.0]
+  q1_store = [0.0]
+  idx = 0
+
+  for num_cycle in range(tot_cycles):
+    for i in range(n):
+      # Compute the relative cycle time    
+      k1,q1 = rhs(t,p_sol[idx])
+      # print(k1)
+      k2,_ = rhs(t+dt/2,p_sol[idx]+(dt/2)*k1)
+      k3,_ = rhs(t+dt/2,p_sol[idx]+(dt/2)*k2)
+      k4,_ = rhs(t+dt,p_sol[idx]+dt*k3)
+      p_sol[idx+1] = p_sol[idx] + (dt/6.0)*(k1+2*k2+2*k3+k4)
+      # print('p:',p_sol[idx]/1333.22)
+      t += dt
+      idx += 1
+      t_store.append(t) #store.append() places the new values we find into the available space 
+      q1_store.append(q1)
+  return t_store,p_sol,q1_store
+  
+# Reference values
+p0    = 80.0*1333.22 # 80.0 mmHg
+hr    = 72.0 # Beats/minute
+sv    = 70.0 # mL
+tpr   = 1.2*1333.22 # mmHg*sec/mL
+c     = 0.5/1333.22 # mL/mmHg
+valve = 1.0
+
+t_ref,sol_ref,q1_ref = solve_rc(p0,hr,sv,tpr,c,valve)
+
+# New parameter values- increase hr
+p0_hr    = 80.0*1333.22 # 80.0 mmHg
+hr_hr    = 100.0 # Beats/minute
+sv_hr    = 70.0 # mL
+tpr_hr   = 1.2*1333.22 # mmHg*sec/mL
+c_hr     = 0.5/1333.22 # mL/mmHg
+valve_hr = 1.0
+
+t_hr,sol_hr,q1_hr = solve_rc(p0_hr,hr_hr,sv_hr,tpr_hr,c_hr,valve_hr)
+
+plt.figure(figsize=(10,3))
+plt.subplot(1,2,1)
+plt.plot(t_ref,sol_ref/1333.22,'r--',alpha=0.6)
+plt.plot(t_hr,sol_hr/1333.22,'g',alpha=0.6)
+
+plt.xlabel('Time [s]')
+plt.ylabel('Pressure [mmHg]')
+plt.subplot(1,2,2)
+plt.plot(t_ref,np.array(q1_ref)*60.0/1000.0,'r--',alpha=0.6)
+plt.plot(t_hr,np.array(q1_hr)*60.0/1000.0,'g',alpha=0.6)
+
+plt.xlabel('Time [s]')
+plt.ylabel('Aortic flow  [L/min]')
+plt.tight_layout()
+plt.show()
+plt.close()
+
+#new plot comparing reference values with new pararmeters- increase po 
+# Reference values
+p0    = 80.0*1333.22 # 80.0 mmHg
+hr    = 72.0 # Beats/minute
+sv    = 70.0 # mL
+tpr   = 1.2*1333.22 # mmHg*sec/mL
+c     = 0.5/1333.22 # mL/mmHg
+valve = 1.0
+
+t_ref,sol_ref,q1_ref = solve_rc(p0,hr,sv,tpr,c,valve)
+
+# New parameter values- increase po
+p0_new    = 150.0*1333.22 # 80.0 mmHg
+hr_new    = 72.0 # Beats/minute
+sv_new    = 70.0 # mL
+tpr_new   = 1.2*1333.22 # mmHg*sec/mL
+c_new     = 0.5/1333.22 # mL/mmHg
+valve_new = 1.0
+
+t_new,sol_new,q1_new = solve_rc(p0_new,hr_new,sv_new,tpr_new,c_new,valve_new)
+
+
+plt.figure(figsize=(10,3))
+plt.subplot(1,2,1)
+plt.plot(t_ref,sol_ref/1333.22,'r--',alpha=0.6)
+plt.plot(t_new,sol_new/1333.22,'g',alpha=0.6)
+
+plt.xlabel('Time [s]')
+plt.ylabel('Pressure [mmHg]')
+plt.subplot(1,2,2)
+plt.plot(t_ref,np.array(q1_ref)*60.0/1000.0,'r--',alpha=0.6)
+plt.plot(t_new,np.array(q1_new)*60.0/1000.0,'g',alpha=0.6)
+
+plt.xlabel('Time [s]')
+plt.ylabel('Aortic flow  [L/min]')
+plt.tight_layout()
+plt.show()
+plt.close()
+
+#new plot plotting reference values with new parameters of increasing stroke volume 
+# Reference values
+p0    = 80.0*1333.22 # 80.0 mmHg
+hr    = 72.0 # Beats/minute
+sv    = 70.0 # mL
+tpr   = 1.2*1333.22 # mmHg*sec/mL
+c     = 0.5/1333.22 # mL/mmHg
+valve = 1.0
+
+t_ref,sol_ref,q1_ref = solve_rc(p0,hr,sv,tpr,c,valve)
+
+# Reference values- increase sv
+p0_sv    = 80.0*1333.22 # 80.0 mmHg
+hr_sv    = 72.0 # Beats/minute
+sv_sv    = 90.0 # mL
+tpr_sv   = 1.2*1333.22 # mmHg*sec/mL
+c_sv     = 0.5/1333.22 # mL/mmHg
+valve_sv = 1.0
+
+t_sv,sol_sv,q1_sv = solve_rc(p0_sv,hr_sv,sv_sv,tpr_sv,c_sv,valve_sv)
+
+plt.figure(figsize=(10,3))
+plt.subplot(1,2,1)
+plt.plot(t_ref,sol_ref/1333.22,'r--',alpha=0.6)
+plt.plot(t_sv,sol_sv/1333.22,'g',alpha=0.6)
+
+
+plt.xlabel('Time [s]')
+plt.ylabel('Pressure [mmHg]')
+plt.subplot(1,2,2)
+plt.plot(t_ref,np.array(q1_ref)*60.0/1000.0,'r--',alpha=0.6)
+plt.plot(t_sv, np.array(q1_sv)*60.0/1000.0,'g', alpha=0.6)
+
+plt.xlabel('Time [s]')
+plt.ylabel('Aortic flow  [L/min]')
+plt.tight_layout()
+plt.show()
+plt.close()
+
+#new plot comparing reference values with new pararmeters- increase tpr  
+# Reference values
+p0    = 80.0*1333.22 # 80.0 mmHg
+hr    = 72.0 # Beats/minute
+sv    = 70.0 # mL
+tpr   = 1.2*1333.22 # mmHg*sec/mL
+c     = 0.5/1333.22 # mL/mmHg
+valve = 1.0
+
+t_ref,sol_ref,q1_ref = solve_rc(p0,hr,sv,tpr,c,valve)
+
+# Reference values- increase tpr 
+p0_tpr    = 80.0*1333.22 # 80.0 mmHg
+hr_tpr    = 72.0 # Beats/minute
+sv_tpr    = 70.0 # mL
+tpr_tpr   = 3*1333.22 # mmHg*sec/mL
+c_tpr     = 0.5/1333.22 # mL/mmHg
+valve_tpr = 1.0
+
+t_tpr,sol_tpr,q1_tpr = solve_rc(p0_tpr,hr_tpr,sv_tpr,tpr_tpr,c_tpr,valve_tpr)
+
+plt.figure(figsize=(10,3))
+plt.subplot(1,2,1)
+plt.plot(t_ref,sol_ref/1333.22,'r--',alpha=0.6)
+plt.plot(t_tpr,sol_tpr/1333.22,'g',alpha=0.6)
+
+
+plt.xlabel('Time [s]')
+plt.ylabel('Pressure [mmHg]')
+plt.subplot(1,2,2)
+plt.plot(t_ref,np.array(q1_ref)*60.0/1000.0,'r--',alpha=0.6)
+plt.plot(t_tpr,np.array(q1_tpr)*60.0/1000.0,'g',alpha=0.6)
+
+plt.xlabel('Time [s]')
+plt.ylabel('Aortic flow  [L/min]')
+plt.tight_layout()
+plt.show()
+plt.close()
+
+#new plot comparing reference values with new pararmeters- increase c  
+# Reference values
+p0    = 80.0*1333.22 # 80.0 mmHg
+hr    = 72.0 # Beats/minute
+sv    = 70.0 # mL
+tpr   = 1.2*1333.22 # mmHg*sec/mL
+c     = 0.5/1333.22 # mL/mmHg
+valve = 1.0
+
+t_ref,sol_ref,q1_ref = solve_rc(p0,hr,sv,tpr,c,valve)
+
+# Reference values- increase c
+p0_c    = 80.0*1333.22 # 80.0 mmHg
+hr_c    = 72.0 # Beats/minute
+sv_c    = 70.0 # mL
+tpr_c   = 1.2*1333.22 # mmHg*sec/mL
+c_c     = 2/1333.22 # mL/mmHg
+valve = 1.0
+
+t_c,sol_c,q1_c = solve_rc(p0_c,hr_c,sv_c,tpr_c,c_c,valve)
+
+plt.figure(figsize=(10,3))
+plt.subplot(1,2,1)
+plt.plot(t_ref,sol_ref/1333.22,'r--',alpha=0.6)
+plt.plot(t_c,sol_c/1333.22,'g',alpha=0.6)
+
+plt.xlabel('Time [s]')
+plt.ylabel('Pressure [mmHg]')
+plt.subplot(1,2,2)
+plt.plot(t_ref,np.array(q1_ref)*60.0/1000.0,'r--',alpha=0.6)
+plt.plot(t_c,np.array(q1_c)*60.0/1000.0,'g',alpha=0.6)
+
+plt.xlabel('Time [s]')
+plt.ylabel('Aortic flow  [L/min]')
+plt.tight_layout()
+plt.show()
+plt.close()
