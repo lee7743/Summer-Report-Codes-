@@ -1,0 +1,74 @@
+import numpy as np
+import matplotlib.pyplot as plt 
+
+#define the rk4 function- like the Euler's Forward Method function 
+def LotkaVolterra_rk4(y0, r, k, b, a, t):
+  def f(t,y):
+   return np.array([r*y[0]-a*y[0]*y[1], b*y[0]*y[1]-k*y[1]])
+   #note: a numpy array is defined as np.array([])
+  
+  y=np.zeros((len(t),2)) #len() functions to return the number of items in an object 
+  y[0]=y0
+  
+  #len(t)-1 is index of last element in list t bc since array indexes start with 0, array with n elements has index of 0,1,2... n-1 
+  for n in range(0, len(t)-1): 
+    dt=t[n+1]-t[n] #time step equation
+    k1= f(t[n],y[n]) #slopes of the runge-kutta method 
+    k2= f(t[n]+dt/2.0,y[n]+(dt/2.0)*k1)
+    k3= f(t[n]+dt/2.0,y[n]+(dt/2.0)*k2)
+    k4= f(t[n+1],y[n]+dt*k3)
+    y[n+1]=y[n]+(dt/6.0)*(k1+2*k2+2*k3+k4)
+  return y
+  
+def main(): 
+  n=30000
+  t=np.linspace(0,100,n) #linspace() creates evenly spaced sequence in specified interval 
+  y0=np.array([10,10])
+  #the initial conditions should be a vector so y0=[10,10] or y0=np.array([10,10]).
+  r=0.1 #stating all the intial parameters 
+  a=0.01
+  b=0.01
+  k=1
+  y = LotkaVolterra_rk4(y0, r, k, b, a, t) #call the function coded earier to return y value 
+
+  y0=np.array([20,20])
+  y_1 = LotkaVolterra_rk4(y0, r, k, b, a, t)
+
+  y0=np.array([30,30])
+  y_2 = LotkaVolterra_rk4(y0, r, k, b, a, t)
+
+  plt.subplot(2, 1, 1)
+  plt.plot(y[:,0], y[:,1], 'b', label='inc 10', alpha=0.6, lw=2.0) 
+  plt.plot(y_1[:,0], y_1[:,1], 'r', label='inc 20', alpha=0.6, lw=2.0)
+  plt.plot(y_2[:,0], y_2[:,1], 'g', label='inc 30', alpha=0.6, lw=2.0)
+  plt.legend()
+  plt.xlabel('Small Fish Population')
+  plt.ylabel('Predator Population')
+  plt.grid(True)
+  plt.title("Solution of Lotka Volterra System using Runge-Katta 4")
+
+
+  #1ST plot y v. x 
+  plt.subplot(2,1,2)
+  plt.plot(t, y, 'b', label='inc 10', alpha=0.6, lw=2.0)
+  plt.plot(t, y_1, 'r', label='inc 20', alpha=0.6, lw=2.0)
+  plt.plot(t, y_2, 'g', label='inc 30', alpha=0.6, lw=2.0)
+  plt.legend(ncol=2)
+  plt.xlabel('Time')
+  plt.ylabel('Population Size')
+  plt.grid(True)
+  plt.title("Solution of Lotka Volterra System using Runge-Katta 4")
+  
+  plt.tight_layout()
+  plt.show()
+
+  print("The maximum of shark population is {}" .format(int(np.max(y))))
+
+
+  print("The maximum of shark population is {}" .format(int(np.max(y_1))))
+
+
+  print("The maximum of shark population is {}" .format(int(np.max(y_2))))
+
+
+main()
